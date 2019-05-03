@@ -6,31 +6,50 @@ import csv
 from konlpy.tag import Twitter
 
 class DataLoader:
-    def __init__(self,label_count,input_size,train_rate):
+    def __init__(self,label_count,input_size,train_rate,dimension):
         '''
-
         :param label_count: 정답 분류 갯수
         :param input_size: 본문, 제목 에서 뽑을 단어 수
         :param train_rate: 트레이닝 테스트 나눌 비율
+        :param dimension: 각 단어당 매칭될 벡터 크기
         '''
-        self.fast_text = self.load_fest_text()  # 데이터가 커서 임시 주석
+        # self.word2vec = self.load_fest_text()
+        self.word2vec = self.load_word2vec_30()
+        self.dimension = dimension
         self.label_count = label_count
         self.input_size = input_size
-        self.dimension = 300
         self.spliter = Twitter()
         self.train_rate = train_rate
 
+    def load_word2vec_30(self):
+        word2vec = {}
+        try:
+            with open("../data/ko.tsv", "r", encoding="utf-8") as target:
+                count = 0
+                surface = ""
+                for line in target:
+                    data = line.split()
+                    if data[0] == str(count):
+                        surface = data[1]
+                        word2vec[surface] = [float(vec) for vec in data[2:]]
+                        count+=1
+                    else:
+                        word2vec[surface] =  word2vec[surface] + [float(vec) for vec in data]
+        except Exception as e:
+            print("word2Vec load faile : ",e)
+        return word2vec
+
     def load_fest_text(self):
-        fast_text = {}
+        word2vec = {}
         try:
             with open("../data/cc.ko.300.vec", "r", encoding="utf-8") as target:
                 target.readline()
                 for line in target:
                     data = line.split()
-                    fast_text[data[0]] = [float(vec) for vec in data[1:]]
+                    word2vec[data[0]] = [float(vec) for vec in data[1:]]
         except Exception as e:
             print("word2Vec load faile : ",e)
-        return fast_text
+        return word2vec
 
     def data_divide_write(self,data_path,output_path1,output_path2):
         lines = []
@@ -88,9 +107,11 @@ class DataLoader:
         input_shape = [[0] * self.dimension] * size
         word_index = 0
         for word in self.spliter.pos(sentence):
-            if word[1] in ['Noun','Verb'] and word[0] in self.fast_text:
-                input_shape[word_index] = self.fast_text[word[0]][:]
+            if word[1] in ['Noun','Verb'] and word[0] in self.word2vec:
+                input_shape[word_index] = self.word2vec[word[0]][:]
                 word_index += 1
+            if word_index >= size:
+                break
         return input_shape
 
 
@@ -105,7 +126,9 @@ class DataLoader:
 if __name__ == "__main__":
     label_count = 3
     train_rate = 0.8
-    input_size = [20,5]
+    dimension = 30
+    input_size = [30,10]
     dataPath = "../data/test2.csv"
-    dataLoader = DataLoader(label_count,input_size,train_rate)
+    dataLoader = DataLoader(label_count,input_size,train_rate,dimension)
     train_input, train_label, test_input, test_label = dataLoader.data_loader(dataPath)
+    print()

@@ -5,10 +5,12 @@ import numpy as np
 
 class ClassificationTrain:
 
-    def __init__(self, trainPath,modelPath,label_count,input_size,train_rate):
+    def __init__(self, trainPath,modelPath,label_count,input_size,train_rate,dimension):
         self.trainPath = trainPath
         self.modelPath = modelPath
-        self.data_loader = DataLoader(label_count,input_size,train_rate)
+        self.input_size = input_size
+        self.dimension = dimension
+        self.data_loader = DataLoader(label_count,input_size,train_rate,dimension)
 
     def train(self,epochs,batch_size,lr):
         '''
@@ -18,12 +20,12 @@ class ClassificationTrain:
         :param lr : learningRate
         :return:
         '''
-        train_input, train_label, test_input, test_label = dataLoader.data_loader(dataPath)
+        train_input, train_label, test_input, test_label = self.data_loader.data_loader(self.trainPath)
         label_count = len(train_label[0])
-        model_cnn = CNNModel.CNNModel()
-        model_cnn.train_model(label_count, lr)
+        model_cnn = CNNModel()
+        model_cnn.train_model(label_count, lr,self.input_size,self.dimension)
         model = model_cnn.model
-        train_history = model.fit(train_input, train_label, epochs=epochs, batch_size=batch_size,verbose=2
+        train_history = model.fit([train_input[1],train_input[0]], train_label, epochs=epochs, batch_size=batch_size,verbose=1
                                   ,validation_data=(test_input,test_label))
         train_history_detail = train_history.history
         model.save(self.modelPath)
@@ -89,8 +91,9 @@ if __name__ == "__main__":
         modelPath = "model"
         label_count = 3
         train_rate = 0.8
-        input_size = [20, 5]
-        train = ClassificationTrain(trainPath,modelPath,label_count,input_size,train_rate)
+        input_size = [30, 10]
+        dimension = 30
+        train = ClassificationTrain(trainPath,modelPath,label_count,input_size,train_rate,dimension)
         epoch = 1000
         batch_size = 100
         lr = 0.01
