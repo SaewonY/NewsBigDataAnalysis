@@ -22,13 +22,16 @@ class CNNModel:
         contents.add(Flatten())
         # merge
         merged = Concatenate(axis=-1)([title.output,contents.output])
-        # merged = Dense(256,activation='relu')(merged)   # 사용법 1
+        merged = Dense(256,activation='relu')(merged)   # 사용법 1
+        merged = Dense(num_classes,activation="softmax")(merged)
+        self.model = Model([title.input, contents.input], merged)
+
         # https://stackoverflow.com/questions/53560767/valueerror-layer-concatenate-1-was-called-with-an-input-that-isnt-a-symbolic-t
-        self.model = Sequential()
-        self.model.add(Dense(256,activation='relu'))
-        self.model.add(Dense(num_classes,activation='softmax'))
+        # self.model = Sequential()
+        # self.model.add(Dense(256,activation='relu'))
+        # self.model.add(Dense(num_classes,activation='softmax'))
         # self.model.add(merged)
-        self.model =Model([title.input,contents.input],self.model)
+        # self.model =Model([title.input,contents.input],self.model)
 
         adam = optimizers.Adam(lr=lr, beta_1=0.9, beta_2=0.999, epsilon=1e-8)
         self.model.compile(loss='categorical_crossentropy', optimizer=adam, metrics=['accuracy'])

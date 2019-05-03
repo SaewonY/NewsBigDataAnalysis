@@ -25,7 +25,7 @@ class ClassificationTrain:
         model_cnn = CNNModel()
         model_cnn.train_model(label_count, lr,self.input_size,self.dimension)
         model = model_cnn.model
-        train_history = model.fit([train_input[1],train_input[0]], train_label, epochs=epochs, batch_size=batch_size,verbose=1
+        train_history = model.fit([train_input[:][1],train_input[0]], train_label, epochs=epochs, batch_size=batch_size,verbose=1
                                   ,validation_data=(test_input,test_label))
         train_history_detail = train_history.history
         model.save(self.modelPath)
