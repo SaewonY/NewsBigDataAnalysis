@@ -31,10 +31,10 @@ class DataLoader:
                     data = line.split()
                     if data[0] == str(count):
                         surface = data[1]
-                        word2vec[surface] = [float(vec) for vec in data[2:]]
+                        word2vec[surface] =[float(vec) for vec in data[2:]]
                         count+=1
                     else:
-                        word2vec[surface] =  word2vec[surface] + [float(vec) for vec in data]
+                        word2vec[surface] = word2vec[surface] + [float(vec) for vec in data]
         except Exception as e:
             print("word2Vec load faile : ",e)
         return word2vec
@@ -92,19 +92,25 @@ class DataLoader:
         input = self.input_embedding(data_list)
         label = self.label_embedding(label_list)
         train_input = input[:rate]
-        train_label = label[:rate]
+        train_len = len(train_input)
+        train_input1 =  np.array([i for i,j in train_input]).reshape(train_len,self.input_size[0],self.dimension,1)
+        train_input2 =  np.array([j for i, j in train_input]).reshape(train_len,self.input_size[1],self.dimension,1)
+        train_label = np.array(label[:rate])
         test_input = input[rate:]
-        test_label = label[rate:]
-        return train_input, train_label, test_input, test_label
+        test_len = len(test_input)
+        test_input1 =   np.array([i for i,j in test_input]).reshape(test_len,self.input_size[0],self.dimension,1)
+        test_input2 =  np.array([j for i, j in test_input]).reshape(test_len,self.input_size[1],self.dimension,1)
+        test_label = np.array(label[rate:])
+        return train_input1, train_input2, train_label, test_input1, test_input2, test_label
 
     def input_embedding(self,data_list):
-        for data_index, data in enumerate(data_list):
-            word_index = 0
-            data_list[data_index] = [self.w2v_match(data[0],self.input_size[0]),self.w2v_match(data[1],self.input_size[1])]
-        return data_list
+        change_data_list = []
+        for data in data_list:
+            change_data_list.append([self.w2v_match(data[0],self.input_size[0]),self.w2v_match(data[1],self.input_size[1])])
+        return change_data_list
 
     def w2v_match(self,sentence,size):
-        input_shape = [[0] * self.dimension] * size
+        input_shape = [[0.0] * self.dimension] * size
         word_index = 0
         for word in self.spliter.pos(sentence):
             if word[1] in ['Noun','Verb'] and word[0] in self.word2vec:
@@ -126,7 +132,7 @@ class DataLoader:
 if __name__ == "__main__":
     label_count = 3
     train_rate = 0.8
-    dimension = 30
+    dimension = 200
     input_size = [30,10]
     dataPath = "../data/test2.csv"
     dataLoader = DataLoader(label_count,input_size,train_rate,dimension)
